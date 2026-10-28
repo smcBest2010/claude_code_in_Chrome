@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Google</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="/static/app.js" defer></script>
+</head>
+<body class="view-home">
+  <!-- ───────────── 홈 ───────────── -->
+  <div id="home" class="home">
+    <header class="topbar">
+      <span id="conn" class="conn" title="서버 연결 상태"></span>
+      <span class="toplink" id="mode-label"></span>
+      <span class="avatar" id="avatar" title="Claude Code">C</span>
+    </header>
+
+    <main class="hero">
+      <h1 class="wordmark" aria-label="Google"><span>G</span><span>o</span><span>o</span><span>g</span><span>l</span><span>e</span></h1>
+      <form id="home-form" class="searchbar" autocomplete="off">
+        <svg class="sb-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+        <textarea name="text" rows="1" placeholder="무엇을 만들까요? 코딩 작업을 입력하세요" aria-label="작업 입력"></textarea>
+        <label class="model-chip" title="이번 작업에 사용할 Claude 모델"><select name="model" aria-label="Claude 모델"><option value="">모델 불러오는 중…</option></select></label>
+        <label class="chip" title="작업할 프로젝트">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-8l-2-2z"/></svg>
+          <select name="project" aria-label="프로젝트"></select>
+        </label>
+        <input type="file" accept="image/png,image/jpeg,image/gif,image/webp" multiple hidden>
+      </form>
+      <div class="thumbs" data-for="home-form"></div>
+      <nav id="tiles" class="tiles" aria-label="최근 대화"></nav>
+    </main>
+
+    <div class="credit">
+      <span class="credit-title">작업 공간</span>
+      <span id="workspace" class="credit-sub"></span>
+    </div>
+  </div>
+
+  <!-- ───────────── 결과 ───────────── -->
+  <div id="results" class="results" hidden>
+    <header class="r-head">
+      <a href="/" class="wordmark-sm" data-nav aria-label="Google"><span>G</span><span>o</span><span>o</span><span>g</span><span>l</span><span>e</span></a>
+      <form id="r-form" class="searchbar sm" autocomplete="off">
+        <textarea name="text" rows="1" placeholder="이어서 입력하세요" aria-label="이어서 입력"></textarea>
+        <button type="submit" class="sb-btn send" title="보내기 (Enter)">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+        </button>
+        <input type="file" accept="image/png,image/jpeg,image/gif,image/webp" multiple hidden>
+      </form>
+      <div class="r-actions">
+        <span id="r-conn" class="conn" title="서버 연결 상태"></span>
+        <button id="stop-btn" class="btn danger" type="button" disabled>중지</button>
+      </div>
+    </header>
+    <div class="thumbs r-thumbs" data-for="r-form"></div>
+    <nav class="r-tabs" role="tablist">
+      <button class="tab active" data-filter="all" role="tab">전체</button>
+      <button class="tab" data-filter="answers" role="tab">답변</button>
+    </nav>
+    <div class="r-body">
+      <main id="feed" class="feed" aria-live="polite"></main>
+      <aside id="panel" class="panel"></aside>
+    </div>
+  </div>
+
+  <dialog id="resume-dialog">
+    <form method="dialog" id="resume-form">
+      <h2>세션 이어가기</h2>
+      <p class="muted">터미널 등에서 만든 Claude Code 세션 ID로 대화를 이어갑니다.</p>
+      <label>세션 ID <input name="sessionId" required pattern="[0-9a-fA-F-]{36}" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"></label>
+      <label>프로젝트 <select name="project"></select></label>
+      <div class="dlg-actions">
+        <button value="cancel" class="btn" formnovalidate>취소</button>
+        <button value="ok" class="btn primary">이어가기</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div id="toast" class="toast" role="status" hidden></div>
+</body>
+</html>

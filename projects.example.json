@@ -1,0 +1,7 @@
+{
+  "projects": {
+    "my-api": "my-api",
+    "portfolio": "portfolio-site",
+    "age-of-linux": "games/age-of-linux"
+  }
+}
