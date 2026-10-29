@@ -1,4 +1,3 @@
-import { createHash, createHmac, timingSafeEqual } from 'node:crypto';
 import fs from 'node:fs';
 import http from 'node:http';
 import path from 'node:path';
@@ -11,7 +10,6 @@ import type { Orchestrator } from './orchestrator.js';
 import type { Redactor } from './redact.js';
 import { toPublic, type Hub } from './webTransport.js';
 
-const COOKIE = 'ccw_session';
 const CONV_ID = '[0-9a-f-]{36}';
 
 const SECURITY_HEADERS: Record<string, string> = {
@@ -26,7 +24,6 @@ const SECURITY_HEADERS: Record<string, string> = {
 const STATIC: Record<string, { file: string; type: string }> = {
   '/static/app.js': { file: 'app.js', type: 'text/javascript; charset=utf-8' },
   '/static/style.css': { file: 'style.css', type: 'text/css; charset=utf-8' },
-  '/static/login.css': { file: 'login.css', type: 'text/css; charset=utf-8' },
   '/favicon.svg': { file: 'favicon.svg', type: 'image/svg+xml' },
 };
 
@@ -50,14 +47,11 @@ export interface ServerDeps {
 export function createServer(d: ServerDeps): http.Server & { closeStreams(): void } {
   const { cfg, orch, hub, log } = d;
   const files = new Map<string, Buffer>();
-  for (const name of ['index.html', 'login.html', 'app.js', 'style.css', 'login.css', 'favicon.svg']) {
+  for (const name of ['index.html', 'app.js', 'style.css', 'favicon.svg']) {
     files.set(name, fs.readFileSync(path.join(d.publicDir, name)));
   }
-  const sessionValue = createHmac('sha256', cfg.webAccessToken).update('ccw-session-v1').digest('hex');
-  const tokenHash = createHash('sha256').update(cfg.webAccessToken).digest();
   const anyHost = cfg.webHost === '0.0.0.0' || cfg.webHost === '::';
   const allowedHosts = new Set([`127.0.0.1:${cfg.webPort}`, `localhost:${cfg.webPort}`, `[::1]:${cfg.webPort}`, `${cfg.webHost}:${cfg.webPort}`]);
-  const failures = new Map<string, number[]>();
   const streams = new Set<http.ServerResponse>();
   // Images are sent as base64 inside JSON.
   const maxBody = Math.ceil(cfg.maxImages * cfg.maxImageBytes * 1.4) + 256 * 1024;
@@ -67,15 +61,6 @@ export function createServer(d: ServerDeps): http.Server & { closeStreams(): voi
     res.end(body);
   };
   const json = (res: http.ServerResponse, status: number, data: unknown) => send(res, status, JSON.stringify(data), 'application/json; charset=utf-8');
-
-  const authed = (req: http.IncomingMessage): boolean => {
-    const cookie = req.headers.cookie ?? '';
-    const m = new RegExp(`(?:^|;\\s*)${COOKIE}=([a-f0-9]{64})`).exec(cookie);
-    if (!m) return false;
-    const a = Buffer.from(m[1]!, 'hex');
-    const b = Buffer.from(sessionValue, 'hex');
-    return a.length === b.length && timingSafeEqual(a, b);
-  };
 
   const readBody = (req: http.IncomingMessage): Promise<string> =>
     new Promise((resolve, reject) => {
@@ -136,13 +121,6 @@ export function createServer(d: ServerDeps): http.Server & { closeStreams(): voi
     return match.value === 'default' ? undefined : match.value;
   };
 
-  const loginThrottled = (ip: string): boolean => {
-    const now = Date.now();
-    const recent = (failures.get(ip) ?? []).filter((t) => now - t < 5 * 60_000);
-    failures.set(ip, recent);
-    return recent.length >= 5;
-  };
-
   async function handle(req: http.IncomingMessage, res: http.ServerResponse): Promise<void> {
     const host = req.headers.host ?? '';
     if (!anyHost && !allowedHosts.has(host)) throw new HttpError(421, 'Unknown host');
@@ -167,32 +145,6 @@ export function createServer(d: ServerDeps): http.Server & { closeStreams(): voi
     // ── public routes ──
     const st = STATIC[p];
     if (st && method === 'GET') return send(res, 200, files.get(st.file)!, st.type, { 'Cache-Control': 'no-cache' });
-    if (p === '/login' && method === 'GET') {
-      const err = url.searchParams.get('e') ? '<p class="err">토큰이 올바르지 않습니다.</p>' : '';
-      return send(res, 200, files.get('login.html')!.toString('utf8').replace('<!--ERR-->', err), 'text/html; charset=utf-8');
-    }
-    if (p === '/login' && method === 'POST') {
-      const ip = req.socket.remoteAddress ?? '?';
-      if (loginThrottled(ip)) return send(res, 429, '잠시 후 다시 시도하세요.', 'text/plain; charset=utf-8');
-      const form = new URLSearchParams(await readBody(req));
-      const given = createHash('sha256').update(form.get('token') ?? '').digest();
-      if (!timingSafeEqual(given, tokenHash)) {
-        failures.get(ip)!.push(Date.now());
-        log.warn(`login failed from ${ip}`);
-        return send(res, 303, '', 'text/plain', { Location: '/login?e=1' });
-      }
-      failures.delete(ip);
-      return send(res, 303, '', 'text/plain', {
-        Location: '/',
-        'Set-Cookie': `${COOKIE}=${sessionValue}; HttpOnly; SameSite=Strict; Path=/; Max-Age=2592000`,
-      });
-    }
-
-    // ── everything else needs the session cookie ──
-    if (!authed(req)) {
-      if (p.startsWith('/api/')) throw new HttpError(401, '로그인이 필요합니다.');
-      return send(res, 303, '', 'text/plain', { Location: '/login' });
-    }
     if (method !== 'GET' && req.headers['x-ccw'] !== '1') throw new HttpError(403, 'Missing request header');
 
     if (method === 'GET' && (p === '/' || new RegExp(`^/c/${CONV_ID}$`).test(p))) {

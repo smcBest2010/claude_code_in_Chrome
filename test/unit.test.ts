@@ -1,5 +1,4 @@
 import assert from 'node:assert/strict';
-import { createHmac } from 'node:crypto';
 import fs from 'node:fs';
 import http from 'node:http';
 import os from 'node:os';
@@ -39,7 +38,6 @@ function cfg(over: Partial<AppConfig> = {}): AppConfig {
   return {
     webHost: '127.0.0.1',
     webPort: 0,
-    webAccessToken: 'test-token-0123456789abcdef',
     workspaceRoot: WS,
     botDir: path.join(WS, 'bot'),
     projects: new Map([
@@ -638,7 +636,7 @@ describe('입력 검증 · 설정 · 환경', () => {
   });
 
   test('child env drops bot secrets and session-binding vars', () => {
-    const env = buildChildEnv({ WEB_ACCESS_TOKEN: 'x', CLAUDE_CODE_SESSION_ID: 'y', CLAUDECODE: '1', PATH: '/bin', ANTHROPIC_API_KEY: 'k' });
+    const env = buildChildEnv({ CLAUDE_CODE_SESSION_ID: 'y', CLAUDECODE: '1', PATH: '/bin', ANTHROPIC_API_KEY: 'k' });
     assert.deepEqual(Object.keys(env).sort(), ['ANTHROPIC_API_KEY', 'PATH']);
   });
 
@@ -646,7 +644,7 @@ describe('입력 검증 · 설정 · 환경', () => {
     const appDir = path.join(PROJ_B, 'app');
     fs.mkdirSync(appDir, { recursive: true });
     fs.writeFileSync(path.join(appDir, 'projects.json'), JSON.stringify({ projects: { beta: 'beta', out: '/tmp', ok: 'alpha' } }));
-    const base = { WEB_ACCESS_TOKEN: 'x'.repeat(20), WORKSPACE_ROOT: WS };
+    const base = { WORKSPACE_ROOT: WS };
     try {
       loadConfig({ ...base, PERMISSION_MODE: 'bypassPermissions' }, appDir);
       assert.fail('should throw');
@@ -671,7 +669,7 @@ describe('HTTP 보안', () => {
   const pub = path.join(TMP, 'public');
   before(async () => {
     fs.mkdirSync(pub, { recursive: true });
-    for (const f of ['index.html', 'login.html', 'app.js', 'style.css', 'login.css', 'favicon.svg']) fs.writeFileSync(path.join(pub, f), f);
+    for (const f of ['index.html', 'app.js', 'style.css', 'favicon.svg']) fs.writeFileSync(path.join(pub, f), f);
     const h = harness(async function* () {});
     const log = createLogger(new Redactor([]), 'error', () => {});
     server = createServer({ cfg: cfg({ webPort: 0 }), db: h.db, orch: h.orch, hub: new Hub(), log, redactor: new Redactor([]), models: { list: async () => [{ value: 'opus', resolvedModel: 'claude-opus-5-5', displayName: 'Opus' }] }, publicDir: pub });
@@ -689,26 +687,17 @@ describe('HTTP 보안', () => {
       r.on('error', reject);
       r.end(init.body);
     });
-  const cookie = () => `ccw_session=${createHmac('sha256', 'test-token-0123456789abcdef').update('ccw-session-v1').digest('hex')}`;
-
-  test('api requires login; pages redirect to login', async () => {
-    assert.equal((await req('/api/bootstrap')).status, 401);
+  test('local pages and read APIs are available without a login cookie', async () => {
+    assert.equal((await req('/api/bootstrap')).status, 200);
     const r = await req('/');
-    assert.equal(r.status, 303);
-    assert.equal(r.headers.location, '/login');
+    assert.equal(r.status, 200);
     assert.match(String(r.headers['content-security-policy']), /script-src 'self'/);
-  });
-  test('wrong token rejected, right token sets an HttpOnly SameSite cookie', async () => {
-    const bad = await req('/login', { method: 'POST', body: 'token=nope', headers: { 'Content-Type': 'application/x-www-form-urlencoded' } });
-    assert.equal(bad.headers.location, '/login?e=1');
-    const good = await req('/login', { method: 'POST', body: 'token=test-token-0123456789abcdef', headers: { 'Content-Type': 'application/x-www-form-urlencoded' } });
-    assert.match(String(good.headers['set-cookie']), /HttpOnly; SameSite=Strict/);
   });
   test('state changes need the custom header and same origin', async () => {
     const body = JSON.stringify({ project: 'alpha', text: 'x' });
-    const h = { Cookie: cookie(), 'Content-Type': 'application/json' };
+    const h = { 'Content-Type': 'application/json' };
     assert.equal((await req('/api/conversations', { method: 'POST', headers: h, body })).status, 403);
     assert.equal((await req('/api/conversations', { method: 'POST', headers: { ...h, 'X-CCW': '1', Origin: 'http://evil.example' }, body })).status, 403);
-    assert.equal((await req('/api/bootstrap', { headers: { Cookie: cookie() } })).status, 200);
+    assert.equal((await req('/api/bootstrap')).status, 200);
   });
 });

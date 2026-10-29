@@ -33,10 +33,6 @@
     } catch {
       return { ok: false, message: '서버에 연결할 수 없습니다. 서버가 실행 중인지 확인하세요.' };
     }
-    if (r.status === 401) {
-      location.href = '/login';
-      return { ok: false, message: '로그인이 필요합니다.' };
-    }
     try {
       const data = await r.json();
       if (!r.ok && data.ok === undefined) data.ok = false;
@@ -44,13 +40,6 @@
     } catch {
       return { ok: false, message: `서버 응답 오류 (HTTP ${r.status})` };
     }
-  }
-
-  function fmtDur(ms) {
-    const s = Math.max(0, Math.round((ms || 0) / 1000));
-    if (s < 60) return `${s}초`;
-    const m = Math.floor(s / 60);
-    return m < 60 ? `${m}분 ${s % 60}초` : `${Math.floor(m / 60)}시간 ${m % 60}분`;
   }
 
   function colorFor(name) {
@@ -272,11 +261,9 @@
       case 'progress': {
         const lines = m.text ? m.text.split('\n') : [];
         const final = meta.durationMs !== undefined && meta.durationMs !== null;
-        const st = meta.status || '실행 중';
-        const cls = final ? '' : st.includes('승인') ? 'wait' : 'live';
-        return `<details class="steps" ${m._detailsOpen ? 'open' : ''}><summary class="steps-head"><span class="pill ${cls}">${esc(st)}</span>
-            <span ${final ? '' : `data-since="${m.createdAt}"`}>${final ? fmtDur(meta.durationMs) : fmtDur(Date.now() - m.createdAt)}</span>
-            <span>· 작업 과정 더보기 (${lines.length})</span></summary>
+        if (final && !lines.length) return '';
+        if (!final && !lines.length) return '<div class="working">작업중</div>';
+        return `<details class="steps" ${m._detailsOpen ? 'open' : ''}><summary class="steps-head">${final ? '작업 과정 더보기' : '<span class="working">작업중</span>'}</summary>
           <div class="steps-content">${lines.map((l) => stepItem(l, status?.project ?? '')).join('')}</div>
         </details>`;
       }
@@ -285,8 +272,7 @@
         return `<article class="overview"><div class="search-source"><span class="source-mark">G</span><span>Google</span></div>
           <h3 class="search-title">${esc(preview.title)}</h3>
           <p class="search-snippet">${esc(preview.snippet)}</p>
-          <details class="answer-details" ${m._detailsOpen ? 'open' : ''}><summary>더보기</summary><div class="md">${md(m.text)}</div></details>
-          <div class="overview-foot">${meta.durationMs ? `<span>${fmtDur(meta.durationMs)}</span>` : ''}${meta.costUsd ? `<span>$${Number(meta.costUsd).toFixed(4)}</span>` : ''}</div></article>`;
+          <details class="answer-details" ${m._detailsOpen ? 'open' : ''}><summary>더보기</summary><div class="md">${md(m.text)}</div></details></article>`;
       }
       case 'error':
         return `<div class="card error"><div class="md">${md(m.text)}</div></div>`;
@@ -551,10 +537,6 @@
     stickToBottom = window.innerHeight + window.scrollY >= document.body.scrollHeight - 80;
   }, { passive: true });
   window.addEventListener('popstate', route);
-  setInterval(() => {
-    for (const el of $$('[data-since]')) el.textContent = fmtDur(Date.now() - Number(el.dataset.since));
-  }, 1000);
-
   refreshBoot().then(() => {
     if (!boot) return;
     $('#resume-form select').innerHTML = boot.projects.map((p) => `<option value="${esc(p.name)}">${esc(p.name)}</option>`).join('');

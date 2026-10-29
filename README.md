@@ -29,7 +29,6 @@ cp projects.example.json projects.json
 ### `.env` (필수 항목)
 
 ```ini
-WEB_ACCESS_TOKEN=여기에-긴-랜덤-문자열      # openssl rand -hex 24
 WORKSPACE_ROOT=/Users/me/work              # 모든 프로젝트는 이 안에 있어야 함
 PERMISSION_MODE=bypassPermissions          # 자동 실행. default | acceptEdits | plan 도 가능
 ```
@@ -56,8 +55,7 @@ npm run build && npm start      # 운영
 npm run dev                     # 개발 (tsx)
 ```
 
-브라우저에서 `http://127.0.0.1:3939`에 접속한 뒤 `WEB_ACCESS_TOKEN`을 입력합니다. 쿠키는 30일 동안 유지됩니다.
-로그인창에는 `WEB_ACCESS_TOKEN=` 뒤의 **값만** 넣으세요. 토큰을 클립보드에 복사하려면 `sed -n 's/^WEB_ACCESS_TOKEN=//p' .env | pbcopy`를 실행합니다. 화면 코드나 `projects.json`을 바꾼 뒤에는 서버를 `Ctrl+C`로 종료하고 다시 시작해야 변경 사항이 반영됩니다.
+브라우저에서 `http://127.0.0.1:3939`에 접속합니다. 화면 코드나 `projects.json`을 바꾼 뒤에는 서버를 `Ctrl+C`로 종료하고 다시 시작해야 변경 사항이 반영됩니다.
 
 종료는 `Ctrl+C`(SIGINT/SIGTERM)입니다. 실행 중인 작업을 중단하고, 상태를 기록한 뒤 종료합니다.
 

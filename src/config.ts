@@ -11,7 +11,6 @@ const ALLOWED_MODES: AllowedPermissionMode[] = ['default', 'acceptEdits', 'plan'
 export interface AppConfig {
   webHost: string;
   webPort: number;
-  webAccessToken: string;
   workspaceRoot: string;
   botDir: string;
   projects: Map<string, ProjectConfig>;
@@ -39,7 +38,6 @@ export class ConfigError extends Error {
 export const BOT_ENV_KEYS = [
   'WEB_HOST',
   'WEB_PORT',
-  'WEB_ACCESS_TOKEN',
   'WORKSPACE_ROOT',
   'PROJECTS_FILE',
   'DB_PATH',
@@ -84,8 +82,6 @@ export function loadConfig(env: NodeJS.ProcessEnv, botDir: string): AppConfig {
     return v ?? '';
   };
 
-  const webAccessToken = req('WEB_ACCESS_TOKEN');
-  if (webAccessToken && webAccessToken.length < 16) problems.push('WEB_ACCESS_TOKEN 은 16자 이상이어야 합니다 (예: openssl rand -hex 24)');
   const webHost = env.WEB_HOST?.trim() || '127.0.0.1';
   if (!/^[A-Za-z0-9.:-]+$/.test(webHost)) problems.push('WEB_HOST 형식이 올바르지 않습니다');
   const webPort = intIn(env.WEB_PORT, 3939, 1, 65535, 'WEB_PORT', problems);
@@ -180,7 +176,6 @@ export function loadConfig(env: NodeJS.ProcessEnv, botDir: string): AppConfig {
   const cfg: AppConfig = {
     webHost,
     webPort,
-    webAccessToken,
     workspaceRoot,
     botDir: realBotDir,
     projects,
