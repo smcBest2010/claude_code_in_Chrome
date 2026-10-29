@@ -13,30 +13,30 @@
   <div id="home" class="home">
     <header class="topbar">
       <span id="conn" class="conn" title="서버 연결 상태"></span>
-      <span class="toplink" id="mode-label"></span>
-      <span class="avatar" id="avatar" title="Claude Code">C</span>
+      <span class="avatar" id="avatar" title="Google">G</span>
     </header>
 
     <main class="hero">
       <h1 class="wordmark" aria-label="Google"><span>G</span><span>o</span><span>o</span><span>g</span><span>l</span><span>e</span></h1>
       <form id="home-form" class="searchbar" autocomplete="off">
         <svg class="sb-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
-        <textarea name="text" rows="1" placeholder="무엇을 만들까요? 코딩 작업을 입력하세요" aria-label="작업 입력"></textarea>
-        <label class="model-chip" title="이번 작업에 사용할 Claude 모델"><select name="model" aria-label="Claude 모델"><option value="">모델 불러오는 중…</option></select></label>
-        <label class="chip" title="작업할 프로젝트">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-8l-2-2z"/></svg>
-          <select name="project" aria-label="프로젝트"></select>
-        </label>
+        <textarea name="text" rows="1" placeholder="Google 검색" aria-label="Google 검색"></textarea>
+        <button type="button" id="home-options-toggle" class="icon-toggle" aria-label="모델 및 작업 위치 선택 열기" aria-expanded="false" aria-controls="home-options" title="모델 및 작업 위치 선택">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+        </button>
+        <div id="home-options" class="search-options" hidden>
+          <label class="model-chip" title="모델 선택"><select name="model" aria-label="모델"><option value="">모델 불러오는 중…</option></select></label>
+          <label class="chip" title="작업 위치 선택">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-8l-2-2z"/></svg>
+            <select name="project" aria-label="작업 위치"></select>
+          </label>
+        </div>
         <input type="file" accept="image/png,image/jpeg,image/gif,image/webp" multiple hidden>
       </form>
       <div class="thumbs" data-for="home-form"></div>
       <nav id="tiles" class="tiles" aria-label="최근 대화"></nav>
     </main>
 
-    <div class="credit">
-      <span class="credit-title">작업 공간</span>
-      <span id="workspace" class="credit-sub"></span>
-    </div>
   </div>
 
   <!-- ───────────── 결과 ───────────── -->
@@ -52,7 +52,9 @@
       </form>
       <div class="r-actions">
         <span id="r-conn" class="conn" title="서버 연결 상태"></span>
-        <button id="stop-btn" class="btn danger" type="button" disabled>중지</button>
+        <button id="details-toggle" class="icon-toggle" type="button" aria-label="대화 정보 열기" aria-expanded="false" aria-controls="panel" title="대화 정보">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+        </button>
       </div>
     </header>
     <div class="thumbs r-thumbs" data-for="r-form"></div>
@@ -62,7 +64,7 @@
     </nav>
     <div class="r-body">
       <main id="feed" class="feed" aria-live="polite"></main>
-      <aside id="panel" class="panel"></aside>
+      <aside id="panel" class="panel" hidden></aside>
     </div>
   </div>
 

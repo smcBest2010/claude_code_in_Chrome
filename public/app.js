@@ -214,8 +214,6 @@
     if (last && boot.projects.some((p) => p.name === last)) sel.value = last;
     $('#resume-form select').innerHTML = sel.innerHTML;
     loadModels($('#home-form'), sel.value);
-    $('#workspace').textContent = boot.workspaceRoot;
-    $('#mode-label').textContent = boot.permissionMode === 'bypassPermissions' ? '자동 실행' : `권한 모드 · ${boot.permissionMode}`;
     const tiles = boot.recent.map((c) => `
       <a class="tile" href="/c/${esc(c.convId)}" data-nav title="${esc(c.title)} (${esc(c.project)})">
         <span class="disc"><span class="letter" data-color="${esc(colorFor(c.project))}">${esc(c.project.slice(0, 1).toUpperCase())}</span>${c.busy ? '<span class="busy"></span>' : ''}</span>
@@ -270,7 +268,7 @@
     const meta = m.meta || {};
     switch (m.kind) {
       case 'user':
-        return `<h2 class="q">${esc(m.text || '(이미지)')}</h2><div class="q-meta">작업 #${esc(meta.jobId ?? '?')}${meta.imageCount ? ` · 이미지 ${meta.imageCount}장` : ''} · ${new Date(m.createdAt).toLocaleString('ko-KR', { hour12: false })}</div>`;
+        return `<section class="query"><div class="query-label">질문</div><details class="query-details"><summary>더보기</summary><div class="query-text">${esc(m.text || '(이미지)')}</div>${meta.imageCount ? `<div class="query-meta">이미지 ${meta.imageCount}장</div>` : ''}</details></section>`;
       case 'progress': {
         const lines = m.text ? m.text.split('\n') : [];
         const final = meta.durationMs !== undefined && meta.durationMs !== null;
@@ -284,7 +282,7 @@
       }
       case 'answer': {
         const preview = answerPreview(m.text);
-        return `<article class="overview"><div class="search-source"><span class="source-mark">C</span><span>Claude Code <small>${esc(status?.project ?? '')} · 작업 #${esc(meta.jobId ?? '')}</small></span></div>
+        return `<article class="overview"><div class="search-source"><span class="source-mark">G</span><span>Google</span></div>
           <h3 class="search-title">${esc(preview.title)}</h3>
           <p class="search-snippet">${esc(preview.snippet)}</p>
           <details class="answer-details" ${m._detailsOpen ? 'open' : ''}><summary>더보기</summary><div class="md">${md(m.text)}</div></details>
@@ -345,7 +343,6 @@
     const s = status;
     if (!s) { $('#panel').innerHTML = ''; return; }
     const busy = s.state !== 'idle';
-    $('#stop-btn').disabled = !busy;
     document.title = `${s.title || '대화'} · Google`;
     $('#panel').innerHTML = `
       <h3>${esc(s.project)}</h3>
@@ -410,6 +407,8 @@
     $('#results').hidden = false;
     $('#feed').innerHTML = '<div class="empty">불러오는 중…</div>';
     $('#panel').innerHTML = '';
+    $('#panel').hidden = true;
+    $('#details-toggle').setAttribute('aria-expanded', 'false');
     stickToBottom = true;
     connect(id);
     rComposer.focus();
@@ -472,6 +471,19 @@
     });
   }
   $('#home-form select[name="project"]').addEventListener('change', (e) => loadModels($('#home-form'), e.target.value));
+  $('#home-options-toggle').addEventListener('click', () => {
+    const options = $('#home-options');
+    const expanded = options.hidden;
+    options.hidden = !expanded;
+    $('#home-options-toggle').setAttribute('aria-expanded', String(expanded));
+    $('#home-options-toggle').setAttribute('aria-label', `모델 및 작업 위치 선택 ${expanded ? '닫기' : '열기'}`);
+  });
+  $('#details-toggle').addEventListener('click', () => {
+    const panel = $('#panel');
+    panel.hidden = !panel.hidden;
+    $('#details-toggle').setAttribute('aria-expanded', String(!panel.hidden));
+    $('#details-toggle').setAttribute('aria-label', `대화 정보 ${panel.hidden ? '열기' : '닫기'}`);
+  });
 
   const homeComposer = makeComposer($('#home-form'), async (text, images, model) => {
     const project = $('#home-form select[name="project"]').value;
@@ -526,7 +538,6 @@
     const m = messages.get(Number(wrap.dataset.mid));
     if (m) m._detailsOpen = e.target.open;
   }, true);
-  $('#stop-btn').addEventListener('click', () => act('stop'));
   $('#resume-dialog').addEventListener('close', async () => {
     const dlg = $('#resume-dialog');
     if (dlg.returnValue !== 'ok') return;
