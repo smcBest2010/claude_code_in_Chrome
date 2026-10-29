@@ -297,3 +297,58 @@ body { background: #fff; }
   .search-title { font-size: 19px; }
   .q { font-size: 19px; }
 }
+
+/* Dark Google search surface. */
+:root {
+  color-scheme: dark;
+  --bg: #202124;
+  --bg-soft: #303134;
+  --card: #303134;
+  --border: #3c4043;
+  --text: #e8eaed;
+  --muted: #9aa0a6;
+  --link: #8ab4f8;
+  --crumb: #bdc1c6;
+  --accent: #8ab4f8;
+  --danger: #f28b82;
+  --warn-bg: #3b3324;
+  --warn-text: #fdd663;
+  --ok: #81c995;
+  --overview-bg: #202124;
+  --code-bg: #303134;
+  --shadow: 0 1px 8px rgba(0, 0, 0, .35);
+}
+body, .home { background: var(--bg); color: var(--text); }
+.topbar { color: var(--muted); }
+.wordmark span, .wordmark-sm span { color: #e8eaed !important; }
+.avatar { background: #5b8f3a; color: #fff; box-shadow: 0 0 0 2px #8ab4f8; }
+.searchbar, .searchbar.sm {
+  background: #303134;
+  color: var(--text);
+  border: 1px solid #5f6368;
+  box-shadow: none;
+}
+.searchbar:hover, .searchbar:focus-within,
+.searchbar.sm:hover, .searchbar.sm:focus-within {
+  border-color: #5f6368;
+  background: #36373b;
+  box-shadow: 0 1px 8px rgba(0, 0, 0, .3);
+}
+.searchbar textarea::placeholder, .searchbar.sm textarea::placeholder { color: #bdc1c6; }
+.sb-icon, .sb-btn, .searchbar.sm .sb-btn, .icon-toggle { color: #bdc1c6; }
+.searchbar.sm .send { color: var(--accent); }
+.sb-btn:hover, .icon-toggle:hover, .icon-toggle[aria-expanded="true"] { background: #45474c; color: var(--accent); }
+.search-options { border-top-color: #5f6368; }
+.chip, .model-chip, .tile .disc { background: #3c4043; color: var(--text); }
+.chip:hover, .model-chip:hover, .tile:hover { background: #45474c; }
+.chip svg, .tile .plus { color: #bdc1c6; }
+.tile { color: var(--text); }
+.tile .label { color: #bdc1c6; }
+.tile .busy { box-shadow: 0 0 0 2px #3c4043; }
+.tile .letter { color: #fff; }
+.source-mark { background: #303134; color: var(--accent); }
+.search-title, .result .rtitle, .query-details, .answer-details, .code-details { color: var(--link); }
+.search-snippet, .query-label, .query-text { color: #bdc1c6; }
+.answer-details .md { background: #292a2d; border-left-color: #5f6368; color: var(--text); }
+.steps-content { border-left-color: var(--border); }
+.toast { background: #3c4043; color: var(--text); }
